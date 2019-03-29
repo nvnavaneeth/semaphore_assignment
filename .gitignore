@@ -1,1 +1,9 @@
-*.swp
+# Ignore all
+*
+
+# Unignore all cpp sources and headers.
+!*.cpp
+!*.h
+
+# Ignore the temporary test file.
+temp_test.cpp

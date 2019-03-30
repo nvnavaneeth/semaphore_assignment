@@ -3,64 +3,68 @@
 #include<stdlib.h>
 #include<chrono>
 #include<ctime>
+#include "my_semaphore.h"
+#include "my_mutex.h"
 
 using namespace std;
 
 
-const int BUFFER_SIZE = 2;
+// Defines the size of the buffer.
+const int BUFFER_SIZE = 3;
+// Position in  buffer to which data is to be next written.
+int write_pos = 0;
+// Position in buffer from which data is to be next read.
+int read_pos = 0;
+
+// Semaphore that stores the amount of buffer space available to write to.
+MySemaphore sem_full(BUFFER_SIZE);
+// Semaphore that stores the count of data yet ot be read from buffer.
+MySemaphore sem_empty(0);
+// Mutex to protect the buffer, write_pos and read_pos in case of multiple
+// producers and consumers.
+MyMutex mtx;
 
 
-void display_int_array(int *arr, int length) {
-  for (int i = 0; i< length; ++i) 
-    cout<<arr[i]<<' ';
-
-  cout<<endl;
-}
-
-
-void producer(int* counter, int* buffer, int n_loops = 100) {
+void producer(int* counter, int* buffer, int producer_id, int n_loops = 100) {
   int in = 0;
 
   for (int i = 0; i<n_loops; ++i) {
-    // Wait some time(Producing the data).
-    // int wait_time_ms = rand()%1000 + 1 ;
-    // this_thread::sleep_for(chrono::milliseconds(wait_time_ms));
-
     // Generate some data.
-    int new_data = i+5;
-
+    int new_data = i+1;
     // If the buffer is full dont do anything.
-    while(*counter == BUFFER_SIZE);
+    sem_full.Wait();
+    mtx.Acquire();
 
     // Add newly produced data to the buffer.
-    buffer[in] = new_data;
-    cout<<"Producer: Adding "<<new_data<<endl;
-    // Update variables.
-    in = (in + 1)% BUFFER_SIZE;
-    *counter += 1;
+    buffer[write_pos] = new_data;
+    cout<<"Producer "<<producer_id<<": Adding to "<<write_pos<<endl;
+    write_pos = (write_pos + 1)% BUFFER_SIZE;
+
+    mtx.Release();
+    sem_empty.Signal();
 
   }
 }
 
-void consumer(int* counter, int* buffer, int n_loops = 100) {
+
+void consumer(int* counter, int* buffer, int consumer_id, int n_loops = 100) {
   int out = 0;
 
   for (int i = 0; i<n_loops; ++i) {
     // If the buffer is empty dont do anything.
-    while(*counter == 0);
+    sem_empty.Wait();
+    mtx.Acquire();
 
     // Consume data from the buffer. 
-    int new_data = buffer[out];
-    cout<<"consumer: Consuming "<<new_data<<endl;
-    // Update variables.
-    out = (out + 1)%BUFFER_SIZE;
-    *counter -= 1;
+    int new_data = buffer[read_pos];
+    cout<<"Consumer "<<consumer_id<<": Reading from "<<read_pos<<endl;
+    read_pos = (read_pos + 1)%BUFFER_SIZE;
 
-    // Wait some time(Consuming the data).
-    // int wait_time_ms = rand()%1000 + 1;
-    // this_thread::sleep_for(chrono::milliseconds(wait_time_ms));
+    mtx.Release();
+    sem_full.Signal();
   }
 }
+
 
 int main() {
   int counter = 0;
@@ -68,12 +72,19 @@ int main() {
 
   srand(time(0));
 
-  thread producer_thread(producer, &counter, buffer, 5);
-  thread consumer_thread(consumer, &counter, buffer, 5);
+  thread producer_thread1(producer, &counter, buffer, 1, 5);
+  thread producer_thread2(producer, &counter, buffer, 2, 5);
+  // Start consumer threads after some time to see that producer thread is 
+  // blocking once the buffer is full.
+  this_thread::sleep_for(chrono::milliseconds(3000));
+  thread consumer_thread1(consumer, &counter, buffer, 1, 5);
+  thread consumer_thread2(consumer, &counter, buffer, 2, 5);
 
   // Wait for threads to finish executing.
-  producer_thread.join();
-  consumer_thread.join();
+  producer_thread1.join();
+  producer_thread2.join();
+  consumer_thread1.join();
+  consumer_thread2.join();
 
   delete[] buffer;
 

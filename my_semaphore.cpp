@@ -23,11 +23,11 @@ void MySemaphore::Wait() {
     // Out of waiting state, which means some other thread has Signalled. 
     // Use of cv is over.
     delete cv;
+    lck.unlock();
     return;
   }
 
   count--;
-  // Leaving CS.
   lck.unlock();
 }
 

@@ -25,8 +25,7 @@ MySemaphore sem_empty(0);
 MyMutex mtx;
 
 
-void producer(int* counter, int* buffer, int producer_id, int n_loops = 100) {
-  int in = 0;
+void producer(int* buffer, int producer_id, int n_loops = 100) {
 
   for (int i = 0; i<n_loops; ++i) {
     // Generate some data.
@@ -47,8 +46,7 @@ void producer(int* counter, int* buffer, int producer_id, int n_loops = 100) {
 }
 
 
-void consumer(int* counter, int* buffer, int consumer_id, int n_loops = 100) {
-  int out = 0;
+void consumer(int* buffer, int consumer_id, int n_loops = 100) {
 
   for (int i = 0; i<n_loops; ++i) {
     // If the buffer is empty dont do anything.
@@ -67,18 +65,15 @@ void consumer(int* counter, int* buffer, int consumer_id, int n_loops = 100) {
 
 
 int main() {
-  int counter = 0;
   int* buffer = new int[BUFFER_SIZE];
 
-  srand(time(0));
-
-  thread producer_thread1(producer, &counter, buffer, 1, 5);
-  thread producer_thread2(producer, &counter, buffer, 2, 5);
+  thread producer_thread1(producer, buffer, 1, 5);
+  thread producer_thread2(producer, buffer, 2, 5);
   // Start consumer threads after some time to see that producer thread is 
   // blocking once the buffer is full.
   this_thread::sleep_for(chrono::milliseconds(3000));
-  thread consumer_thread1(consumer, &counter, buffer, 1, 5);
-  thread consumer_thread2(consumer, &counter, buffer, 2, 5);
+  thread consumer_thread1(consumer, buffer, 1, 5);
+  thread consumer_thread2(consumer, buffer, 2, 5);
 
   // Wait for threads to finish executing.
   producer_thread1.join();

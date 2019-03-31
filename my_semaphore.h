@@ -11,7 +11,7 @@ class MySemaphore {
   // The semaphore variable.
   int count;
   // Mutex to protect CS.
-  std::mutex mtx;
+  mutable std::mutex mtx;
   // Queue to store conditional variables that can be used to wake up threads
   // put to sleep.
   std::queue<std::condition_variable*> cv_queue;

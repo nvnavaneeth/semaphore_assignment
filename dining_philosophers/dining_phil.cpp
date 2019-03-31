@@ -15,32 +15,27 @@ const int N_PHILOSOPHERS = 5;
 
 int main() {
   srand(time(0));
-  cout<<"Here";
 
   PhilosopherScheduler scheduler(N_PHILOSOPHERS);
 
-  cout<<"Here";
   vector<Philosopher> phil_vec;
   vector<thread> phil_thread_vec;
 
-  cout<<"Here";
   // Initialize the philosophers. Philosophers are numbered from 1 to
   // N_PHILOSOPHERS. Sticks are numbered from 1 to N_PHILOSOPHERS in
-  // clockwise manner, with  no. 1 assigned to the chopstick right of
+  // clockwise manner, with  no. 0 assigned to the chopstick right of
   // philosopher no. 1.
-  for (int i = 1; i <= N_PHILOSOPHERS; ++i) {
+  for (int i = 0; i < N_PHILOSOPHERS; ++i) {
     phil_vec.emplace_back(i, i, (i+1)%N_PHILOSOPHERS, &scheduler); 
   }
 
-  cout<<"Phils created\n";
   bool run_flag = true;
   bool *run_flag_ptr = &run_flag;
 
-  for (int i = 1; i <= N_PHILOSOPHERS; ++i) {
-  //  phil_thread_vec.emplace_back(&Philosopher::run, &phil_vec[i-1], run_flag_ptr);
+  for (int i = 0; i < N_PHILOSOPHERS; ++i) {
+     phil_thread_vec.emplace_back(&Philosopher::run, &phil_vec[i], run_flag_ptr);
   }
 
-  cout<<"threads created\n";
   // Let philosopher threads run for some time.
   this_thread::sleep_for(chrono::seconds(5));
   run_flag = false;

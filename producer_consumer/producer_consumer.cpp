@@ -3,8 +3,8 @@
 #include<stdlib.h>
 #include<chrono>
 #include<ctime>
-#include "my_semaphore.h"
-#include "my_mutex.h"
+#include "../my_semaphore.h"
+#include "../my_mutex.h"
 
 using namespace std;
 

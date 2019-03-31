@@ -36,7 +36,7 @@ void PhilosopherScheduler::release_sticks(Philosopher* phil) {
   stick_owner[phil->left_stick] = -1;
   stick_owner[phil->right_stick] = -1;
   
-  for(int i = 1; i<= phil_queue.size(); ++i) {
+  for(int i = 0; i< phil_queue.size(); ++i) {
     auto* phil = phil_queue[i];
     // Acquire left stick if its free.
     if (stick_owner[phil->left_stick]<0)
